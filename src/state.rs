@@ -27,6 +27,12 @@ use crate::level::{Level, LevelTile};
 
 pub type TileMap = amethyst::tiles::TileMap<GameTile, MortonEncoder2D>;
 
+pub struct Loading;
+impl SimpleState for Loading {
+    // TODO: Implement loading logic here
+    // TODO: Add progress bar
+}
+
 pub struct DDState;
 
 impl SimpleState for DDState {
@@ -84,8 +90,8 @@ fn init_camera(world: &mut World, player: Entity, dimensions: &ScreenDimensions)
     // the entire screen
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 1.);
-    transform.scale_mut().x *= 5.0;
-    transform.scale_mut().y *= 5.0;
+    // transform.scale_mut().x *= 5.0;
+    // transform.scale_mut().y *= 5.0;
 
     world
         .create_entity()
@@ -116,7 +122,7 @@ fn load_sprites(world: &mut World) -> SpriteSheetHandle {
         let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
-            "sprites/logo.png",
+            "sprites/dirtgrass.png",
             ImageFormat::default(),
             (),
             &texture_storage,
@@ -129,7 +135,7 @@ fn load_sprites(world: &mut World) -> SpriteSheetHandle {
         let loader = world.read_resource::<Loader>();
         let sheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
         loader.load(
-            "sprites/logo.ron",
+            "sprites/dirtgrass.ron",
             SpriteSheetFormat(texture_handle),
             (),
             &sheet_storage,
@@ -148,7 +154,7 @@ impl Tile for GameTile {
                 match level.get_tile(p.xy()).expect("Hopefully we don't crash") {
                     LevelTile::Plain => Some(0),
                     LevelTile::Grass => Some(1),
-                    LevelTile::Fence => Some(2),
+                    LevelTile::Fence => None,
                     LevelTile::Empty => None,
                 }
             } else {
@@ -169,7 +175,7 @@ fn init_map(world: &mut World, sprites: SpriteSheetHandle) -> (TileMap, Transfor
         (level.width, level.height)
     };
     let level_size = Vector3::new(width as u32, height as u32, 1);
-    let tile_size = Vector3::new(24, 24, 1);
+    let tile_size = Vector3::new(32, 32, 1);
     let map = TileMap::new(level_size, tile_size, Some(sprites));
     let transform = Transform::default();
 
@@ -203,9 +209,9 @@ fn init_player(
     let pos = Position(Point3::new(1, 5, 0));
     let mut transform = Transform::from(map.to_world(&Point3::new(1, 5, 0), None));
     transform.translation_mut().z += 0.1;
+    transform.scale_mut().x *= 0.7;
+    transform.scale_mut().y *= 0.7;
     info!("{:?}", transform);
-    transform.scale_mut().x *= 0.1;
-    transform.scale_mut().y *= 0.1;
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 1,
