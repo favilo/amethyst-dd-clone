@@ -1,16 +1,33 @@
 [package]
-name = "amethyst-starter-2d"
+name = "dd"
 version = "0.1.0"
-authors = ["Hilmar Wiegand <me@hwgnd.de>"]
+authors = ["Kevin Oberlies <favilo@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-amethyst = "0.13.0"
+amethyst = { git = "https://github.com/amethyst/amethyst", branch = "master", features = ["tiles",] }
+amethyst-imgui = "*"
+amethyst-inspector = { path = "../amethyst-inspector" }
+chrono = "*"
+itertools = "*"
 log = { version = "0.4.8", features = ["serde"] }
+minterpolate = "*"
+ndarray = { version = "0.13.0", features = ["serde-1"] }
+nom = "5.0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8"
+
+thread_profiler = { version = "0.3", optional = true }
 
 [features]
-default = ["vulkan"]
+default = ["vulkan", # "nightly",
+           "json", "amethyst/no-slow-safety-checks",
+           "thread_profiler/thread_profiler"]
+
 empty = ["amethyst/empty"]
 metal = ["amethyst/metal"]
 vulkan = ["amethyst/vulkan"]
+
 nightly = ["amethyst/nightly"]
+json = ["amethyst/json"]
+profiler = ["amethyst/profiler"]

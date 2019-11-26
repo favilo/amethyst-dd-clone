@@ -1,0 +1,7 @@
+(
+    axes: {
+        "north_south": Emulated(pos: Key(W), neg: Key(S)),
+        "east_west": Emulated(pos: Key(D), neg: Key(A)),
+    },
+    actions: {},
+)
