@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 amethyst = { git = "https://github.com/amethyst/amethyst", branch = "master", features = ["tiles",] }
 amethyst-imgui = "*"
-amethyst-inspector = { path = "../amethyst-inspector" }
+# amethyst-inspector = { git = "https://github.com/Awpteamoose/amethyst-inspector" }
 chrono = "*"
 itertools = "*"
 log = { version = "0.4.8", features = ["serde"] }
@@ -31,3 +31,6 @@ vulkan = ["amethyst/vulkan"]
 nightly = ["amethyst/nightly"]
 json = ["amethyst/json"]
 profiler = ["amethyst/profiler"]
+
+# [patch."https://github.com/Awpteamoose/amethyst-inspector"]
+# amethyst-inspector = { path = "../amethyst-inspector" }
