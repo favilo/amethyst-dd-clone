@@ -1,0 +1,3 @@
+[submodule "amethyst-imgui"]
+	path = amethyst-imgui
+	url = https://github.com/amethyst/amethyst-imgui.git
