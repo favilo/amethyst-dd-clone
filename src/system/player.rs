@@ -9,7 +9,7 @@ use chrono::Duration;
 use crate::{
     component::{MovingObject, Player, Position},
     level::Level,
-    state::TileMap,
+    states::game::TileMap,
 };
 
 #[derive(Debug, SystemDesc, Default)]

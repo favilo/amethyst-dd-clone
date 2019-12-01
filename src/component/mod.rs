@@ -10,7 +10,7 @@ use chrono::Duration;
 use minterpolate::{linear_interpolate, InterpolationPrimitive};
 use std::{ops::Add, time::Instant};
 
-use crate::state::TileMap;
+use crate::states::game::TileMap;
 
 #[derive(Debug, Default)]
 pub struct Player;

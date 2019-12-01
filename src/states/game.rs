@@ -5,7 +5,7 @@ use amethyst::{
         transform::Transform,
         Parent,
     },
-    ecs::Entity,
+    ecs::{Entity, World},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
     renderer::{
@@ -20,26 +20,21 @@ use amethyst::{
     window::ScreenDimensions,
 };
 
-use log::info;
-
-use crate::component::{Player, Position};
-use crate::level::{Level, LevelTile};
+use crate::{
+    component::{Player, Position},
+    events::GameStateEvent,
+    level::{Level, LevelTile},
+};
 
 pub type TileMap = amethyst::tiles::TileMap<GameTile, MortonEncoder2D>;
 
-pub struct Loading;
-impl SimpleState for Loading {
-    // TODO: Implement loading logic here
-    // TODO: Add progress bar
-}
-
 pub struct DDState;
 
-impl SimpleState for DDState {
+impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for DDState {
     // On start will run when this state is initialized. For more
     // state lifecycle hooks, see:
     // https://book.amethyst.rs/stable/concepts/state.html#life-cycle
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'a, 'b>>) {
         let world = data.world;
 
         // Get the screen dimensions so we can initialize the camera and
@@ -61,26 +56,48 @@ impl SimpleState for DDState {
 
     fn handle_event(
         &mut self,
-        mut _data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
-        if let StateEvent::Window(event) = &event {
-            // Check if the window should be closed
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                return Trans::Quit;
+        _: StateData<'_, GameData<'a, 'b>>,
+        event: GameStateEvent,
+    ) -> Trans<GameData<'a, 'b>, GameStateEvent> {
+        match event {
+            GameStateEvent::Window(event) => {
+                // Check if the window should be closed
+                if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                    return Trans::Quit;
+                }
+
+                // Listen to any key events
+                // if let Some(event) = get_key(&event) {
+                //     log::info!("handling key event: {:?}", event);
+                // }
+
+                // If you're looking for a more sophisticated event handling solution,
+                // including key bindings and gamepad support, please have a look at
+                // https://book.amethyst.rs/stable/pong-tutorial/pong-tutorial-03.html#capturing-user-input
             }
-
-            // Listen to any key events
-            // if let Some(event) = get_key(&event) {
-            //     info!("handling key event: {:?}", event);
-            // }
-
-            // If you're looking for a more sophisticated event handling solution,
-            // including key bindings and gamepad support, please have a look at
-            // https://book.amethyst.rs/stable/pong-tutorial/pong-tutorial-03.html#capturing-user-input
+            GameStateEvent::Ui(_) => {}
+            GameStateEvent::App(_) => {}
         }
 
         // Keep going
+        Trans::None
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default).
+    fn fixed_update(
+        &mut self,
+        _data: StateData<'_, GameData<'a, 'b>>,
+    ) -> Trans<GameData<'a, 'b>, GameStateEvent> {
+        Trans::None
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
+    fn update(
+        &mut self,
+        data: StateData<'_, GameData<'a, 'b>>,
+    ) -> Trans<GameData<'a, 'b>, GameStateEvent> {
+        data.data.update(&data.world);
         Trans::None
     }
 }
@@ -205,13 +222,13 @@ fn init_player(
     map_transform: &Transform,
     sprite_sheet: &SpriteSheetHandle,
 ) -> Entity {
-    info!("{:?}", map_transform);
+    log::info!("{:?}", map_transform);
     let pos = Position(Point3::new(1, 5, 0));
     let mut transform = Transform::from(map.to_world(&Point3::new(1, 5, 0), None));
     transform.translation_mut().z += 0.1;
     transform.scale_mut().x *= 0.7;
     transform.scale_mut().y *= 0.7;
-    info!("{:?}", transform);
+    log::info!("{:?}", transform);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 1,

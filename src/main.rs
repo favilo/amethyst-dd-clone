@@ -22,12 +22,16 @@ use chrono::Duration;
 use std::time::Instant;
 
 mod component;
+mod events;
 mod level;
-mod state;
+mod states;
 mod system;
 
-use state::GameTile;
-use system::{PlayerSystem, MovingObjectSystem};
+use crate::{
+    events::{GameStateEvent, GameStateEventReader},
+    states::game::{DDState, GameTile},
+    system::{MovingObjectSystem, PlayerSystem},
+};
 
 fn setup_logging() -> amethyst::Result<()> {
     let program_start = Instant::now();
@@ -90,13 +94,23 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(amethyst::ui::RenderUi::default()),
         )?
         .with(PlayerSystem::default(), "player_system", &["input_system"])
-        .with(MovingObjectSystem::default(), "mob_system", &["player_system"]);
+        .with(
+            MovingObjectSystem::default(),
+            "mob_system",
+            &["player_system"],
+        );
     #[cfg(inspector)]
     let game_data = gamedata
-        .with(amethyst_inspector::InspectorHierarchy::default(), "", &[])
-        .with(Inspector, "", &[""]);
+        .with(
+            amethyst_inspector::InspectorHierarchy::default(),
+            "inspector_hierarchy",
+            &[],
+        )
+        .with(Inspector, "inspector", &["inspector_hierarchy"]);
 
-    let mut game = Application::new(resources, state::DDState, game_data)?;
+    let mut game: CoreApplication<GameData, GameStateEvent, GameStateEventReader> =
+        CoreApplication::<_, GameStateEvent, GameStateEventReader>::build(resources, DDState)?
+            .build(game_data)?;
     game.run();
 
     Ok(())
