@@ -1,5 +1,4 @@
 use amethyst::{
-    assets::{AssetStorage, Loader},
     core::{
         math::{Point3, Vector3},
         transform::Transform,
@@ -9,8 +8,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
     renderer::{
-        sprite::SpriteSheetHandle, Camera, ImageFormat, SpriteRender, SpriteSheet,
-        SpriteSheetFormat, Texture,
+        sprite::SpriteSheetHandle, Camera, SpriteRender,
     },
     tiles::{Map, MortonEncoder2D, Tile},
     utils::{
@@ -24,18 +22,22 @@ use crate::{
     component::{Player, Position},
     events::GameStateEvent,
     level::{Level, LevelTile},
+    states::RuntimeSystemState,
 };
 
 pub type TileMap = amethyst::tiles::TileMap<GameTile, MortonEncoder2D>;
 
-pub struct DDState;
+pub struct GameState {
+    pub sheet_handle: SpriteSheetHandle,
+}
 
-impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for DDState {
+impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for GameState {
     // On start will run when this state is initialized. For more
     // state lifecycle hooks, see:
     // https://book.amethyst.rs/stable/concepts/state.html#life-cycle
     fn on_start(&mut self, data: StateData<'_, GameData<'a, 'b>>) {
         let world = data.world;
+        *world.write_resource() = RuntimeSystemState::Running;
 
         // Get the screen dimensions so we can initialize the camera and
         // place our sprites correctly later. We'll clone this since we'll
@@ -46,9 +48,8 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for DDState {
         init_level(world);
 
         // Load our sprites and display them
-        let sprites = load_sprites(world);
-        let (map, map_transform) = init_map(world, sprites.clone());
-        let player = init_player(world, &map, &map_transform, &sprites);
+        let (map, map_transform) = init_map(world, self.sheet_handle.clone());
+        let player = init_player(world, &map, &map_transform, &self.sheet_handle.clone());
 
         // Place the camera
         init_camera(world, player, &dimensions);
@@ -129,36 +130,6 @@ fn init_camera(world: &mut World, player: Entity, dimensions: &ScreenDimensions)
         .with(Parent { entity: player })
         .named("camera")
         .build();
-}
-
-fn load_sprites(world: &mut World) -> SpriteSheetHandle {
-    // Load the texture for our sprites. We'll later need to
-    // add a handle to this texture to our `SpriteRender`s, so
-    // we need to keep a reference to it.
-    let texture_handle = {
-        let loader = world.read_resource::<Loader>();
-        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-        loader.load(
-            "sprites/dirtgrass.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
-    };
-
-    // Load the spritesheet definition file, which contains metadata on our
-    // spritesheet texture.
-    let sheet_handle = {
-        let loader = world.read_resource::<Loader>();
-        let sheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
-        loader.load(
-            "sprites/dirtgrass.ron",
-            SpriteSheetFormat(texture_handle),
-            (),
-            &sheet_storage,
-        )
-    };
-    sheet_handle
 }
 
 #[derive(Default, Clone)]

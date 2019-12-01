@@ -1,7 +1,7 @@
 use amethyst::{
-    core::Transform,
+    core::{SystemDesc, Transform},
     derive::SystemDesc,
-    ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData, WriteStorage},
+    ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
 use std::time::Instant;

@@ -8,6 +8,7 @@ use amethyst::{
         RenderingBundle,
     },
     tiles::{MortonEncoder2D, RenderTiles2D},
+    ui::{RenderUi, UiBundle},
     utils::{application_root_dir, ortho_camera::CameraOrthoSystem},
     LogLevelFilter, Logger,
 };
@@ -18,6 +19,8 @@ use amethyst::{
 };
 #[cfg(inspector)]
 use amethyst_inspector::{inspector, inspectors::*, Inspect, InspectControl};
+
+use amethyst_imgui::RenderImgui;
 use chrono::Duration;
 use std::time::Instant;
 
@@ -29,8 +32,8 @@ mod system;
 
 use crate::{
     events::{GameStateEvent, GameStateEventReader},
-    states::game::{DDState, GameTile},
-    system::{MovingObjectSystem, PlayerSystem},
+    states::{game::GameTile, loading::Loading},
+    system::GameBundle,
 };
 
 fn setup_logging() -> amethyst::Result<()> {
@@ -80,8 +83,9 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with(CameraOrthoSystem::default(), "camera_ortho", &[])
         .with_bundle(TransformBundle::new())?
-        .with_bundle(amethyst::ui::UiBundle::<amethyst::input::StringBindings>::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(input_config)?)?
+        .with_bundle(GameBundle)?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -90,15 +94,10 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderTiles2D::<GameTile, MortonEncoder2D>::default())
-                // .with_plugin(amethyst_imgui::RenderImgui::<amethyst::input::StringBindings>::default())
-                .with_plugin(amethyst::ui::RenderUi::default()),
-        )?
-        .with(PlayerSystem::default(), "player_system", &["input_system"])
-        .with(
-            MovingObjectSystem::default(),
-            "mob_system",
-            &["player_system"],
-        );
+                .with_plugin(RenderUi::default())
+                .with_plugin(RenderImgui::<StringBindings>::default()),
+        )?;
+
     #[cfg(inspector)]
     let game_data = gamedata
         .with(
@@ -109,8 +108,11 @@ fn main() -> amethyst::Result<()> {
         .with(Inspector, "inspector", &["inspector_hierarchy"]);
 
     let mut game: CoreApplication<GameData, GameStateEvent, GameStateEventReader> =
-        CoreApplication::<_, GameStateEvent, GameStateEventReader>::build(resources, DDState)?
-            .build(game_data)?;
+        CoreApplication::<_, GameStateEvent, GameStateEventReader>::build(
+            resources,
+            Loading::default(),
+        )?
+        .build(game_data)?;
     game.run();
 
     Ok(())

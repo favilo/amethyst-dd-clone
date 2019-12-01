@@ -1,7 +1,7 @@
 use amethyst::{
-    core::math::Point3,
+    core::{math::Point3, SystemDesc},
     derive::SystemDesc,
-    ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData},
+    ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData, World},
     input::{InputHandler, StringBindings},
 };
 use chrono::Duration;
@@ -40,10 +40,11 @@ impl<'s> System<'s> for PlayerSystem {
             input.axis_value("north_south").expect("axis should exist"),
         );
         for (entity, _, _, pos) in (&entities, !&mobs, &players, &positions).join() {
+            let duration = Duration::milliseconds(100);
             let mob = if d_x != 0.0 {
                 if !level.is_blocking((*pos + Position(Point3::new(d_x as u32, 0, 0))).0.xy()) {
                     Some(MovingObject::new(
-                        Duration::milliseconds(250),
+                        duration,
                         &tilemap,
                         *pos,
                         *pos + Position(Point3::new(d_x as u32, 0, 0)),
@@ -54,7 +55,7 @@ impl<'s> System<'s> for PlayerSystem {
             } else if d_y != 0.0 {
                 if !level.is_blocking((*pos + Position(Point3::new(0, d_y as u32, 0))).0.xy()) {
                     Some(MovingObject::new(
-                        Duration::milliseconds(250),
+                        duration,
                         &tilemap,
                         *pos,
                         *pos + Position(Point3::new(0, d_y as u32, 0)),
