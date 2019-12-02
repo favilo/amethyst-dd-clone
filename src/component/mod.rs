@@ -1,14 +1,11 @@
 use amethyst::{
-    core::{
-        math::{Point3, Vector3},
-    },
+    core::{math::{Point3, Vector3}},
     ecs::prelude::{Component, DenseVecStorage, NullStorage},
     tiles::Map,
 };
 
-use chrono::Duration;
 use minterpolate::{linear_interpolate, InterpolationPrimitive};
-use std::{ops::Add, time::Instant};
+use std::{ops::Add, time::Duration};
 
 use crate::states::game::TileMap;
 
@@ -21,7 +18,7 @@ impl Component for Player {
 
 #[derive(Debug)]
 pub struct MovingObject {
-    start_time: Instant,
+    start_time: f64,
     duration: Duration,
     start: Vector3<f32>,
     end: Vector3<f32>,
@@ -29,11 +26,17 @@ pub struct MovingObject {
 }
 
 impl MovingObject {
-    pub fn new(duration: Duration, tilemap: &TileMap, s: Position, e: Position) -> Self {
+    pub fn new(
+        start_time: f64,
+        duration: Duration,
+        tilemap: &TileMap,
+        s: Position,
+        e: Position,
+    ) -> Self {
         let start = tilemap.to_world(&s.0, None);
         let end = tilemap.to_world(&e.0, None);
         Self {
-            start_time: Instant::now(),
+            start_time,
             duration,
             start,
             end,
@@ -41,11 +44,11 @@ impl MovingObject {
         }
     }
 
-    pub fn interpolate(&self, now: Instant) -> Vector3<f32> {
+    pub fn interpolate(&self, now: f64) -> Vector3<f32> {
         if !self.is_done(now) {
             linear_interpolate(
-                (now - self.start_time).as_secs_f32(),
-                &[0.0, self.duration.to_std().unwrap().as_secs_f32()],
+                (now - self.start_time) as f32,
+                &[0.0, self.duration.as_secs_f32()],
                 &[Vec(self.start), Vec(self.end)],
                 false,
             )
@@ -55,8 +58,8 @@ impl MovingObject {
         }
     }
 
-    pub fn is_done(&self, now: Instant) -> bool {
-        self.start_time + self.duration.to_std().unwrap() < now
+    pub fn is_done(&self, now: f64) -> bool {
+        self.start_time + self.duration.as_secs_f64() < now
     }
 }
 

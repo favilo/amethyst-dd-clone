@@ -7,9 +7,7 @@ use amethyst::{
     ecs::{Entity, World},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{
-        sprite::SpriteSheetHandle, Camera, SpriteRender,
-    },
+    renderer::{sprite::SpriteSheetHandle, Camera, SpriteRender},
     tiles::{Map, MortonEncoder2D, Tile},
     utils::{
         application_root_dir,
@@ -48,8 +46,14 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for GameState {
         init_level(world);
 
         // Load our sprites and display them
-        let (map, map_transform) = init_map(world, self.sheet_handle.clone());
-        let player = init_player(world, &map, &map_transform, &self.sheet_handle.clone());
+        let (map, map_transform, map_entity) = init_map(world, self.sheet_handle.clone());
+        let player = init_player(
+            world,
+            &map,
+            &map_transform,
+            &self.sheet_handle.clone(),
+            map_entity,
+        );
 
         // Place the camera
         init_camera(world, player, &dimensions);
@@ -108,8 +112,8 @@ fn init_camera(world: &mut World, player: Entity, dimensions: &ScreenDimensions)
     // the entire screen
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 1.);
-    // transform.scale_mut().x *= 5.0;
-    // transform.scale_mut().y *= 5.0;
+
+    let divisor = 2.4;
 
     world
         .create_entity()
@@ -120,10 +124,10 @@ fn init_camera(world: &mut World, player: Entity, dimensions: &ScreenDimensions)
         .with(CameraOrtho::new(
             CameraNormalizeMode::Contain,
             CameraOrthoWorldCoordinates {
-                left: -dimensions.width() / 4.0,
-                right: dimensions.width() / 4.0,
-                top: -dimensions.height() / 4.0,
-                bottom: dimensions.height() / 4.0,
+                left: -dimensions.width() / divisor,
+                right: dimensions.width() / divisor,
+                top: -dimensions.height() / divisor,
+                bottom: dimensions.height() / divisor,
             },
         ))
         .with(transform)
@@ -137,25 +141,24 @@ pub struct GameTile;
 impl Tile for GameTile {
     fn sprite(&self, p: Point3<u32>, w: &World) -> Option<usize> {
         let level = w.try_fetch::<Level>();
-        if let Some(level) = level {
-            if level.in_bounds(p.xy()) {
-                match level.get_tile(p.xy()).expect("Hopefully we don't crash") {
-                    LevelTile::Plain => Some(0),
-                    LevelTile::Grass => Some(1),
-                    LevelTile::Fence => None,
-                    LevelTile::Empty => None,
-                }
-            } else {
-                None
+        if level.is_none() {
+            return None;
+        }
+        let level = level.unwrap();
+        if level.in_bounds(p.xy()) {
+            match level.get_tile(p.xy()).expect("Hopefully we don't crash") {
+                LevelTile::Plain => Some(0),
+                LevelTile::Grass => Some(1),
+                LevelTile::Fence => None,
+                LevelTile::Empty => None,
             }
         } else {
             None
         }
-        //Some(((p.x + p.y * 3) % 3) as usize)
     }
 }
 
-fn init_map(world: &mut World, sprites: SpriteSheetHandle) -> (TileMap, Transform) {
+fn init_map(world: &mut World, sprites: SpriteSheetHandle) -> (TileMap, Transform, Entity) {
     let (width, height) = {
         let level = world
             .try_fetch::<Level>()
@@ -167,12 +170,12 @@ fn init_map(world: &mut World, sprites: SpriteSheetHandle) -> (TileMap, Transfor
     let map = TileMap::new(level_size, tile_size, Some(sprites));
     let transform = Transform::default();
 
-    let _map_entity = world
+    let map_entity = world
         .create_entity()
         .with(map.clone())
         .with(transform.clone())
         .build();
-    (map, transform)
+    (map, transform, map_entity)
 }
 
 fn init_level(world: &mut World) {
@@ -192,6 +195,7 @@ fn init_player(
     map: &TileMap,
     map_transform: &Transform,
     sprite_sheet: &SpriteSheetHandle,
+    map_entity: Entity,
 ) -> Entity {
     log::info!("{:?}", map_transform);
     let pos = Position(Point3::new(1, 5, 0));
@@ -211,6 +215,7 @@ fn init_player(
         .with(Player)
         .with(sprite)
         .with(pos)
+        .with(Parent { entity: map_entity })
         .named("player")
         .build();
     player

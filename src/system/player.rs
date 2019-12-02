@@ -1,10 +1,10 @@
 use amethyst::{
-    core::{math::Point3, SystemDesc},
+    core::{math::Point3, timing::Time},
     derive::SystemDesc,
     ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData, World},
     input::{InputHandler, StringBindings},
 };
-use chrono::Duration;
+use std::time::Duration;
 
 use crate::{
     component::{MovingObject, Player, Position},
@@ -25,10 +25,11 @@ impl<'s> System<'s> for PlayerSystem {
         Read<'s, Level>,
         Read<'s, InputHandler<StringBindings>>,
         Read<'s, LazyUpdate>,
+        Read<'s, Time>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (entities, mobs, players, positions, tilemaps, level, input, lazy) = data;
+        let (entities, mobs, players, positions, tilemaps, level, input, lazy, time) = data;
         let tilemap = tilemaps.join().next();
         if tilemap.is_none() {
             return;
@@ -40,10 +41,11 @@ impl<'s> System<'s> for PlayerSystem {
             input.axis_value("north_south").expect("axis should exist"),
         );
         for (entity, _, _, pos) in (&entities, !&mobs, &players, &positions).join() {
-            let duration = Duration::milliseconds(100);
+            let duration = Duration::from_millis(200);
             let mob = if d_x != 0.0 {
                 if !level.is_blocking((*pos + Position(Point3::new(d_x as u32, 0, 0))).0.xy()) {
                     Some(MovingObject::new(
+                        time.absolute_time_seconds(),
                         duration,
                         &tilemap,
                         *pos,
@@ -55,6 +57,7 @@ impl<'s> System<'s> for PlayerSystem {
             } else if d_y != 0.0 {
                 if !level.is_blocking((*pos + Position(Point3::new(0, d_y as u32, 0))).0.xy()) {
                     Some(MovingObject::new(
+                        time.absolute_time_seconds(),
                         duration,
                         &tilemap,
                         *pos,

@@ -1,10 +1,10 @@
 use amethyst::{
-    core::{SystemDesc, Transform},
+    core::{timing::Time, SystemDesc, Transform},
     derive::SystemDesc,
     ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
-use std::time::Instant;
+use std::time::Duration;
 
 use crate::component::{MovingObject, Position};
 
@@ -18,13 +18,13 @@ impl<'s> System<'s> for MovingObjectSystem {
         ReadStorage<'s, MovingObject>,
         WriteStorage<'s, Position>,
         Read<'s, LazyUpdate>,
-        // TODO
+        Read<'s, Time>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (entities, mut transforms, mobs, mut positions, lazy) = data;
+        let (entities, mut transforms, mobs, mut positions, lazy, time) = data;
+        let now = time.absolute_time_seconds();
         for (e, trans, mob) in (&entities, &mut transforms, &mobs).join() {
-            let now = Instant::now();
             *trans.translation_mut() = mob.interpolate(now);
             if mob.is_done(now) {
                 positions.get_mut(e).expect("Should have a position").0 = mob.end_p.0;

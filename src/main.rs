@@ -12,12 +12,12 @@ use amethyst::{
     utils::{application_root_dir, ortho_camera::CameraOrthoSystem},
     LogLevelFilter, Logger,
 };
-#[cfg(inspector)]
+#[cfg(feature = "inspector")]
 use amethyst::{
     core::{Hidden, HiddenPropagate, Named, Transform},
     ui::{UiText, UiTransform},
 };
-#[cfg(inspector)]
+#[cfg(feature = "inspector")]
 use amethyst_inspector::{inspector, inspectors::*, Inspect, InspectControl};
 
 use amethyst_imgui::RenderImgui;
@@ -61,8 +61,10 @@ fn setup_logging() -> amethyst::Result<()> {
     Ok(())
 }
 
-#[cfg(inspector)]
+#[cfg(feature = "inspector")]
 inspector![
+    Position,
+    MovingObject,
     Transform,
     UiTransform,
     Hidden,
@@ -98,7 +100,10 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderImgui::<StringBindings>::default()),
         )?;
 
-    #[cfg(inspector)]
+    #[cfg(feature = "inspector")]
+    log::info!("Inspector getting added");
+
+    #[cfg(feature = "inspector")]
     let game_data = gamedata
         .with(
             amethyst_inspector::InspectorHierarchy::default(),

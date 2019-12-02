@@ -9,7 +9,7 @@ amethyst = { git = "https://github.com/amethyst/amethyst", branch = "master", fe
 # amethyst = { version = "0.13.2", features = ["tiles",] }
 amethyst-imgui = { git = "https://github.com/amethyst/amethyst-imgui", features = ["shader-compiler"] }
 # amethyst-imgui = { version = "0.5.2", features = ["shader-compiler"] }
-# amethyst-inspector = { git = "https://github.com/Awpteamoose/amethyst-inspector" }
+amethyst-inspector = { git = "https://github.com/Awpteamoose/amethyst-inspector" }
 chrono = "*"
 derivative = "*"
 itertools = "*"
@@ -37,8 +37,10 @@ nightly = ["amethyst/nightly"]
 json = ["amethyst/json"]
 profiler = ["amethyst/profiler"]
 
-# [patch."https://github.com/Awpteamoose/amethyst-inspector"]
-# amethyst-inspector = { path = "../amethyst-inspector" }
+inspector = []
+
+[patch."https://github.com/Awpteamoose/amethyst-inspector"]
+amethyst-inspector = { path = "../amethyst-inspector" }
 
 [patch."https://github.com/amethyst/amethyst-imgui"]
-amethyst-imgui = { path = "../amethyst-imgui" }
+amethyst-imgui = { path = "./amethyst-imgui" }
